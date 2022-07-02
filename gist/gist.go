@@ -57,7 +57,10 @@ func Post(msg []byte) (uuid.UUID, error) {
 func Remove(uid string) error {
 	mutex.Lock()
 	defer mutex.Unlock()
-	uuid := uuid.MustParse(uid)
+	uuid, err := uuid.Parse(uid)
+	if err != nil {
+		return err
+	}
 	if _, ok := AllGist[uuid]; !ok {
 		return errors.New("gist not found, uid: " + string(uid))
 	}
@@ -88,7 +91,10 @@ func GetAllKV() map[string]*Gist {
 func Describe(uid string) (string, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
-	uuid := uuid.MustParse(uid)
+	uuid, err := uuid.Parse(uid)
+	if err != nil {
+		return "", err
+	}
 	if _, ok := AllGist[uuid]; !ok {
 		return "", errors.New("gist not found, uid: " + string(uid))
 	}
