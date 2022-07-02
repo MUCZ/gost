@@ -1,6 +1,8 @@
 package server
 
 import (
+	"gost/gist"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -9,32 +11,70 @@ import (
 func Start() {
 	router := gin.Default()
 
-	// This handler will match /user/john but will not match /user/ or /user
-	router.GET("/user/:name", func(c *gin.Context) {
-		name := c.Param("name")
-		c.String(http.StatusOK, "Hello %s", name)
+	// get all
+	router.GET("/gist", func(c *gin.Context) {
+		ret := gist.GetAllKV()
+
+		c.IndentedJSON(200, ret)
 	})
 
-	// However, this one will match /user/john/ and also /user/john/send
-	// If no other routers match /user/john, it will redirect to /user/john/
-	router.GET("/user/:name/*action", func(c *gin.Context) {
-		name := c.Param("name")
+	// get one
+	router.GET("/gist/:uid", func(c *gin.Context) {
+		uid := c.Param("uid")
+		ret, err := gist.Get(uid)
+		if err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+		} else {
+			c.String(200, ret.String()+"\n")
+		}
+	})
+
+	// set one
+	router.POST("/gist", func(c *gin.Context) {
+		msg, err := ioutil.ReadAll(c.Request.Body)
+		if err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+		uid, err := gist.Post(msg)
+		if err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+		} else {
+			c.String(200, uid.String()+"\n")
+		}
+	})
+
+	// describe one
+	router.GET("/gist/:uid/*action", func(c *gin.Context) {
+		uid := c.Param("uid")
 		action := c.Param("action")
-		message := name + " is " + action
-		c.String(http.StatusOK, message)
+		switch action {
+		case "/describe":
+			ret, err := gist.Describe(uid)
+			if err != nil {
+				c.String(http.StatusInternalServerError, err.Error())
+			} else {
+				c.String(200, ret)
+			}
+		default:
+			c.String(http.StatusInternalServerError, "action : "+action+" not supported")
+		}
 	})
 
-	// For each matched request Context will hold the route definition
-	router.POST("/user/:name/*action", func(c *gin.Context) {
-		b := c.FullPath() == "/user/:name/*action" // true
-		c.String(http.StatusOK, "%t", b)
+	// delete one
+	router.DELETE("/gist/:uid", func(c *gin.Context) {
+		uid := c.Param("uid")
+		err := gist.Remove(uid)
+		if err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+		} else {
+			c.String(200, "deleted")
+		}
 	})
 
-	// This handler will add a new router for /user/groups.
-	// Exact routes are resolved before param routes, regardless of the order they were defined.
-	// Routes starting with /user/groups are never interpreted as /user/:name/... routes
-	router.GET("/user/groups", func(c *gin.Context) {
-		c.String(http.StatusOK, "The available groups are [...]")
+	// health check
+	router.GET("/health", func(c *gin.Context) {
+		c.String(http.StatusOK, "OK")
 	})
 
 	router.Run(":8080")

@@ -9,9 +9,12 @@ import (
 )
 
 type Gist struct {
-	Uid         uuid.UUID
 	CreatedTime time.Time
-	Msg         []byte
+	Msg         string
+}
+
+func (g *Gist) String() string {
+	return string(g.Msg)
 }
 
 var mutex *sync.Mutex
@@ -25,7 +28,10 @@ func init() {
 func Get(uid string) (*Gist, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
-	uuid := uuid.MustParse(uid)
+	uuid, err := uuid.Parse(uid)
+	if err != nil {
+		return nil, errors.New("invalid uid: " + uid)
+	}
 	if g, ok := AllGist[uuid]; ok {
 		return g, nil
 	}
@@ -36,16 +42,16 @@ func Post(msg []byte) (uuid.UUID, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	g := &Gist{
-		Uid:         uuid.New(),
 		CreatedTime: time.Now(),
-		Msg:         msg,
+		Msg:         string(msg),
 	}
 
-	if _, ok := AllGist[g.Uid]; ok {
-		return uuid.Nil, errors.New("gist already exists, uid: " + g.Uid.String())
+	Uid := uuid.New()
+	if _, ok := AllGist[Uid]; ok {
+		return uuid.Nil, errors.New("gist already exists, uid: " + Uid.String())
 	}
-	AllGist[g.Uid] = g
-	return g.Uid, nil
+	AllGist[Uid] = g
+	return Uid, nil
 }
 
 func Remove(uid string) error {
@@ -79,12 +85,12 @@ func GetAllKV() map[string]*Gist {
 	return kv
 }
 
-func Describe(uid string) string {
+func Describe(uid string) (string, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	uuid := uuid.MustParse(uid)
 	if _, ok := AllGist[uuid]; !ok {
-		return "gist not found, uid: " + string(uid)
+		return "", errors.New("gist not found, uid: " + string(uid))
 	}
-	return "Created At: " + AllGist[uuid].CreatedTime.String() + " : \n" + string(AllGist[uuid].Msg)
+	return "Created At: " + AllGist[uuid].CreatedTime.String() + " : \n" + string(AllGist[uuid].Msg) + "\n", nil
 }

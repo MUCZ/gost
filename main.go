@@ -1,22 +1,14 @@
 package main
 
 import (
-	"fmt"
+	"errors"
 	"gost/client"
 	"gost/server"
-	"log"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 )
-
-// get [uid]
-// set [filename]
-// delete [uid]
-// describe [uid]
-
-// start
-// serverStatus
 
 func main() {
 
@@ -29,8 +21,19 @@ func main() {
 				Aliases: []string{"g"},
 				Usage:   "get a gist from uid",
 				Action: func(cCtx *cli.Context) error {
-					fmt.Println("added task: ", cCtx.Args().First())
-					client.Get()
+					if cCtx.NArg() != 1 {
+						color.Red("uid is required")
+						return nil
+					}
+					uid := cCtx.Args().Get(0)
+					color.Blue("getting uid: %s", uid)
+					ret, err := client.Get(uid)
+					if err != nil {
+						color.Red("error: %s", err)
+					} else {
+						color.Green("ret: ")
+						color.Cyan(ret)
+					}
 					return nil
 				},
 			},
@@ -39,8 +42,31 @@ func main() {
 				Aliases: []string{"st"},
 				Usage:   "set a gist from a file, show the uid",
 				Action: func(cCtx *cli.Context) error {
-					fmt.Println("completed task: ", cCtx.Args().First())
-					client.Post()
+					if cCtx.NArg() != 1 {
+						return errors.New("file is required")
+					}
+					file := cCtx.Args().Get(0)
+					color.Blue("setting file: %s", file)
+					fhandler, err := os.Open(file)
+					if err != nil {
+						return err
+					}
+					defer fhandler.Close()
+					msg := make([]byte, 1024)
+					n, err := fhandler.Read(msg)
+					if err != nil {
+						return err
+					}
+					if n == 1024 {
+						return errors.New("msg is too long")
+					}
+					ret, err := client.Post(string(msg[:n]))
+					if err != nil {
+						return errors.New("error: " + err.Error() + "ret : " + ret)
+					} else {
+						color.Green("ret: ")
+						color.Cyan(ret)
+					}
 					return nil
 				},
 			},
@@ -49,8 +75,18 @@ func main() {
 				Aliases: []string{"r"},
 				Usage:   "delete a gist from uid",
 				Action: func(cCtx *cli.Context) error {
-					fmt.Println("deleted task: ", cCtx.Args().First())
-					client.Delete()
+					if cCtx.NArg() != 1 {
+						return errors.New("uid is required")
+					}
+					uid := cCtx.Args().Get(0)
+					color.Blue("deleting uid: %s", uid)
+					ret, err := client.Delete(uid)
+					if err != nil {
+						return err
+					} else {
+						color.Green("ret:  ")
+						color.Cyan(ret)
+					}
 					return nil
 				},
 			},
@@ -59,8 +95,18 @@ func main() {
 				Aliases: []string{"d"},
 				Usage:   "describe a gist from uid",
 				Action: func(cCtx *cli.Context) error {
-					fmt.Println("described task: ", cCtx.Args().First())
-					client.Describe()
+					if cCtx.NArg() != 1 {
+						return errors.New("uid is required")
+					}
+					uid := cCtx.Args().Get(0)
+					color.Blue("describing uid: %s", uid)
+					ret, err := client.Describe(uid)
+					if err != nil {
+						return err
+					} else {
+						color.Green("ret: ")
+						color.Cyan(ret)
+					}
 					return nil
 				},
 			},
@@ -69,8 +115,14 @@ func main() {
 				Aliases: []string{"ls"},
 				Usage:   "list all gists",
 				Action: func(cCtx *cli.Context) error {
-					fmt.Println("listed all gists")
-					client.List()
+					color.Blue("listing all gists")
+					ret, err := client.List()
+					if err != nil {
+						return err
+					} else {
+						color.Green("ret: ")
+						color.Cyan(ret)
+					}
 					return nil
 				},
 			},
@@ -88,8 +140,12 @@ func main() {
 				Usage:   "get the server status",
 				Aliases: []string{"ss"},
 				Action: func(cCtx *cli.Context) error {
-					fmt.Println("server is running")
-					client.Check()
+					ret, err := client.Check()
+					if err != nil {
+						return err
+					} else {
+						color.Green("server is running: ret: %v \n ", ret)
+					}
 					return nil
 				},
 			},
@@ -97,7 +153,7 @@ func main() {
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		log.Fatal(err)
+		color.Red(err.Error())
 	}
 
 }
