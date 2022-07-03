@@ -9,11 +9,11 @@ import (
 )
 
 var (
-	serverAddr = "http://" + server.Addr
+	Addr = "http://" + server.Addr
 )
 
 func List() (string, error) {
-	resp, err := http.Get(serverAddr + "/gist")
+	resp, err := http.Get(Addr + "/gist")
 
 	if err != nil {
 		return "", err
@@ -31,7 +31,7 @@ func List() (string, error) {
 }
 
 func Get(uid string) (string, error) {
-	resp, err := http.Get(serverAddr + "/gist/" + uid)
+	resp, err := http.Get(Addr + "/gist/" + uid)
 
 	if err != nil {
 		return "", err
@@ -56,7 +56,7 @@ func Get(uid string) (string, error) {
 func Post(msg string) (string, error) {
 	buf := bytes.NewBuffer([]byte(msg))
 
-	resp, err := http.Post(serverAddr+"/gist", "text/plain", buf)
+	resp, err := http.Post(Addr+"/gist", "text/plain", buf)
 
 	if err != nil {
 		return "", err
@@ -75,7 +75,7 @@ func Post(msg string) (string, error) {
 }
 
 func Describe(uid string) (string, error) {
-	resp, err := http.Get(serverAddr + "/gist/" + uid + "/describe")
+	resp, err := http.Get(Addr + "/gist/" + uid + "/describe")
 
 	if err != nil {
 		return "", err
@@ -95,7 +95,7 @@ func Describe(uid string) (string, error) {
 }
 
 func Delete(uid string) (string, error) {
-	req, err := http.NewRequest("DELETE", serverAddr+"/gist/"+uid, nil)
+	req, err := http.NewRequest("DELETE", Addr+"/gist/"+uid, nil)
 	if err != nil {
 		return "", err
 	}
@@ -118,7 +118,7 @@ func Delete(uid string) (string, error) {
 }
 
 func Check() (bool, error) {
-	resp, err := http.Get(serverAddr + "/health")
+	resp, err := http.Get(Addr + "/health")
 
 	if err != nil {
 		return false, err

@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const (
-	Addr = "localhost:8080"
+var (
+	Addr = ""
 )
 
 func Start() {

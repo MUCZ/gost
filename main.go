@@ -10,11 +10,33 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+var (
+	port = "8080"
+)
+
 func main() {
 
 	app := &cli.App{
 		Name:  "gost",
 		Usage: "dummy gist written in go",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:        "port",
+				Value:       "8080",
+				Usage:       "port to listen on",
+				Aliases:     []string{"p"},
+				Destination: &port,
+			},
+		},
+		Before: func(c *cli.Context) error {
+			if c.Args().Len() == 0 {
+				return errors.New("no command specified")
+			}
+			server.Addr = "localhost:" + port
+			client.Addr = "http://localhost:" + port
+			color.Cyan("Server addr: %s", server.Addr)
+			return nil
+		},
 		Commands: []*cli.Command{
 			{
 				Name:    "get",
@@ -152,7 +174,6 @@ func main() {
 		},
 	}
 
-	color.Cyan("Server addr: %s", server.Addr)
 	if err := app.Run(os.Args); err != nil {
 		color.Red(err.Error())
 	}
