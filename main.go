@@ -52,12 +52,12 @@ func main() {
 						return err
 					}
 					defer fhandler.Close()
-					msg := make([]byte, 1024)
+					msg := make([]byte, 20*1024)
 					n, err := fhandler.Read(msg)
 					if err != nil {
 						return err
 					}
-					if n == 1024 {
+					if n == 20*1024 {
 						return errors.New("msg is too long")
 					}
 					ret, err := client.Post(string(msg[:n]))
@@ -152,6 +152,7 @@ func main() {
 		},
 	}
 
+	color.Cyan("Server addr: %s", server.Addr)
 	if err := app.Run(os.Args); err != nil {
 		color.Red(err.Error())
 	}

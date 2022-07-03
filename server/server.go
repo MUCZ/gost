@@ -8,6 +8,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	Addr = "localhost:8080"
+)
+
 func Start() {
 	router := gin.Default()
 
@@ -77,5 +81,5 @@ func Start() {
 		c.String(http.StatusOK, "OK")
 	})
 
-	router.Run(":8080")
+	router.Run(Addr)
 }

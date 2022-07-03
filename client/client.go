@@ -3,12 +3,13 @@ package client
 import (
 	"bytes"
 	"errors"
+	"gost/server"
 	"io/ioutil"
 	"net/http"
 )
 
 var (
-	serverAddr = "http://localhost:8080"
+	serverAddr = "http://" + server.Addr
 )
 
 func List() (string, error) {
