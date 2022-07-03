@@ -11,6 +11,7 @@ import (
 )
 
 var (
+	ip   = "localhost"
 	port = "8080"
 )
 
@@ -27,13 +28,19 @@ func main() {
 				Aliases:     []string{"p"},
 				Destination: &port,
 			},
+			&cli.StringFlag{
+				Name:        "ip",
+				Value:       "localhost",
+				Usage:       "ip to listen on",
+				Destination: &ip,
+			},
 		},
 		Before: func(c *cli.Context) error {
 			if c.Args().Len() == 0 {
 				return errors.New("no command specified")
 			}
-			server.Addr = "localhost:" + port
-			client.Addr = "http://localhost:" + port
+			server.Addr = ip + ":" + port
+			client.Addr = "http://" + ip + ":" + port
 			color.Cyan("Server addr: %s", server.Addr)
 			return nil
 		},

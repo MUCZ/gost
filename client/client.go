@@ -3,13 +3,12 @@ package client
 import (
 	"bytes"
 	"errors"
-	"gost/server"
 	"io/ioutil"
 	"net/http"
 )
 
 var (
-	Addr = "http://" + server.Addr
+	Addr string = ""
 )
 
 func List() (string, error) {
